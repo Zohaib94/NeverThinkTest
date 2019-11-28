@@ -36,6 +36,10 @@ const App = () => {
   const [hidden, setHidden] = useState(false);
 
   const updateChannelsFor = channel => {
+    // In case if the order of videos in a channel is changed, that change has also got to be recorded
+    // in the channels array so we can play first unwatched video for every channel whenever user changes
+    // the channel. This method has been written for that purpose.
+
     let updateChannels = channels;
 
     let newChannelIndex = updateChannels.findIndex(
@@ -47,6 +51,8 @@ const App = () => {
   };
 
   const changeChannel = channel => {
+    // When a video ends or a channel is changed, we update both the state of currentChannel and channels,
+    // For this purpose, this method has been written.
     setHidden(true);
     setCurrentChannel(channel);
     setCurrentVideoState(VIDEO_STATES.stopped);
@@ -54,12 +60,19 @@ const App = () => {
   };
 
   useEffect(() => {
+    // This will behave similar to componentDidMount as this effect will run only once.
+
     setChannels(channelData);
     setCurrentChannel(channelData[0]);
     setCurrentVideo(channelData[0].playlist[0]);
   }, []);
 
   useEffect(() => {
+    // When the video ends, move the current video to the end of the playlist
+    // Then update the state of that channel
+    // And the state of the channels will also be updated to make sure that
+    // the first unwatched video is played whenever user changes the channel.
+
     if (currentVideoState === VIDEO_STATES.ended) {
       let updateChannel = currentChannel;
       let updatePlaylist = updateChannel.playlist;
@@ -73,6 +86,12 @@ const App = () => {
   }, [currentVideoState]);
 
   useEffect(() => {
+    // In order to change videoId in react-native-youtube, we have to first unmount the component,
+    // and then remount the component with the new videoId. For this purpose, I am using hidden state.
+    // hidden state will become true when a channel is changed or video ends, so we can unmount the
+    // YouTube Player by not rendering it and then set state for currentVideo and then set hidden to false
+    // so we can re-render the YouTube component.
+
     if (hidden) {
       setCurrentVideo(currentChannel.playlist[0]);
       setHidden(false);
