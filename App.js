@@ -19,12 +19,15 @@ import {
   TouchableOpacity,
   View,
   Image,
+  Platform,
 } from 'react-native';
 
 const VIDEO_STATES = {
   ended: 'ended',
   stopped: 'stopped',
 };
+
+const isAndroid = Platform.OS === 'android';
 
 const App = () => {
   const [currentChannel, setCurrentChannel] = useState({});
@@ -100,34 +103,44 @@ const App = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.videoContainer}>
-        {hidden ? null : (
-          <YouTube
-            apiKey={ApiKeys.YOUTUBE_API_KEY}
-            videoId={currentVideo}
-            play
-            onChangeState={e => setCurrentVideoState(e.state)}
-            style={styles.videoPlayer}
-          />
-        )}
-      </View>
-      <View style={styles.listContainer}>
-        <FlatList
-          data={channels}
-          showsVerticalScrollIndicator={false}
-          renderItem={({item}) => {
-            return (
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => changeChannel(item)}>
-                <Image style={styles.image} source={{uri: item.icon}} />
-                <Text style={styles.item}>{item.name}</Text>
-              </TouchableOpacity>
-            );
-          }}
-          keyExtractor={item => `${item.id}`}
-        />
-      </View>
+      {isAndroid ? (
+        <>
+          <View style={styles.videoContainer}>
+            {hidden ? null : (
+              <YouTube
+                apiKey={ApiKeys.YOUTUBE_API_KEY}
+                videoId={currentVideo}
+                play
+                onChangeState={e => setCurrentVideoState(e.state)}
+                style={styles.videoPlayer}
+              />
+            )}
+          </View>
+          <View style={styles.listContainer}>
+            <FlatList
+              data={channels}
+              showsVerticalScrollIndicator={false}
+              renderItem={({item}) => {
+                return (
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => changeChannel(item)}>
+                    <Image style={styles.image} source={{uri: item.icon}} />
+                    <Text style={styles.item}>{item.name}</Text>
+                  </TouchableOpacity>
+                );
+              }}
+              keyExtractor={item => `${item.id}`}
+            />
+          </View>
+        </>
+      ) : (
+        <View>
+          <Text>
+            Sorry, this application is only available for Android at the moment
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
