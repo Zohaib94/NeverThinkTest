@@ -17,7 +17,8 @@ import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
-  DrawerLayoutAndroid,
+  View,
+  Image,
 } from 'react-native';
 
 const VIDEO_STATES = {
@@ -37,7 +38,9 @@ const App = () => {
   const updateChannelsFor = channel => {
     let updateChannels = channels;
 
-    let newChannelIndex = updateChannels.findIndex(updateChannel => updateChannel.id === channel.id);
+    let newChannelIndex = updateChannels.findIndex(
+      updateChannel => updateChannel.id === channel.id,
+    );
 
     updateChannels[newChannelIndex] = channel;
     setChannels(updateChannels);
@@ -77,10 +80,19 @@ const App = () => {
   }, [hidden]);
 
   return (
-    <DrawerLayoutAndroid
-      drawerWidth={300}
-      drawerPosition={'left'}
-      renderNavigationView={() => (
+    <View style={styles.container}>
+      <View style={styles.videoContainer}>
+        {hidden ? null : (
+          <YouTube
+            apiKey={ApiKeys.YOUTUBE_API_KEY}
+            videoId={currentVideo}
+            play
+            onChangeState={e => setCurrentVideoState(e.state)}
+            style={styles.videoPlayer}
+          />
+        )}
+      </View>
+      <View style={styles.listContainer}>
         <FlatList
           data={channels}
           showsVerticalScrollIndicator={false}
@@ -89,30 +101,22 @@ const App = () => {
               <TouchableOpacity
                 style={styles.button}
                 onPress={() => changeChannel(item)}>
+                <Image style={styles.image} source={{uri: item.icon}} />
                 <Text style={styles.item}>{item.name}</Text>
               </TouchableOpacity>
             );
           }}
           keyExtractor={item => `${item.id}`}
         />
-      )}>
-      {hidden ? null : (
-        <YouTube
-          apiKey={ApiKeys.YOUTUBE_API_KEY}
-          videoId={currentVideo}
-          play
-          onChangeState={e => setCurrentVideoState(e.state)}
-          style={{alignSelf: 'stretch', height: 300}}
-        />
-      )}
-    </DrawerLayoutAndroid>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   item: {
     padding: 10,
-    fontSize: 18,
+    fontSize: 22,
     height: 44,
   },
   container: {
@@ -123,6 +127,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#DDDDDD',
     padding: 10,
+    flexDirection: 'row',
+  },
+  videoContainer: {
+    flex: 0.6,
+  },
+  listContainer: {
+    flex: 0.4,
+    backgroundColor: 'white',
+  },
+  videoPlayer: {
+    alignSelf: 'stretch',
+    height: 300,
+  },
+  image: {
+    width: 75,
+    height: 75,
   },
 });
 
