@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 /**
  * Sample React Native App
  * https://github.com/facebook/react-native
@@ -6,109 +7,66 @@
  * @flow
  */
 
-import React from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  StatusBar,
-} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import YouTube from 'react-native-youtube';
+import channelData from './src/data/channels';
+import ApiKeys from './api_keys';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const VIDEO_STATES = {
+  ended: 'ended',
+  stopped: 'stopped',
+};
 
-const App: () => React$Node = () => {
+const App = () => {
+  const [currentChannel, setCurrentChannel] = useState({});
+  const [channels, setChannels] = useState([]);
+  const [currentVideo, setCurrentVideo] = useState('');
+  const [currentVideoState, setCurrentVideoState] = useState(
+    VIDEO_STATES.stopped,
+  );
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    setChannels(channelData);
+    setCurrentChannel(channelData[0]);
+    setCurrentVideo(channelData[0].playlist[0]);
+  }, []);
+
+  useEffect(() => {
+    if (currentVideoState === VIDEO_STATES.ended) {
+      let updateChannel = currentChannel;
+      let updatePlaylist = updateChannel.playlist;
+      let previousVideo = updatePlaylist.shift();
+
+      updatePlaylist = updatePlaylist.concat(previousVideo);
+      updateChannel.playlist = updatePlaylist;
+
+      setHidden(true);
+      setCurrentChannel(updateChannel);
+      setCurrentVideoState(VIDEO_STATES.stopped);
+    }
+  }, [currentVideoState, currentChannel]);
+
+  useEffect(() => {
+    if (hidden) {
+      setCurrentVideo(currentChannel.playlist[0]);
+      setHidden(false);
+    }
+  }, [hidden, currentChannel]);
+
   return (
     <>
-      <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          style={styles.scrollView}>
-          <Header />
-          {global.HermesInternal == null ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
-          <View style={styles.body}>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.js</Text> to change this
-                screen and then come back to see your edits.
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+      {hidden ? null : (
+        <YouTube
+          apiKey={ApiKeys.YOUTUBE_API_KEY}
+          videoId={currentVideo}
+          play={true}
+          onChangeState={e => setCurrentVideoState(e.state)}
+          style={{alignSelf: 'stretch', height: 300}}
+        />
+      )}
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: Colors.lighter,
-  },
-  engine: {
-    position: 'absolute',
-    right: 0,
-  },
-  body: {
-    backgroundColor: Colors.white,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
-  },
-});
 
 export default App;
